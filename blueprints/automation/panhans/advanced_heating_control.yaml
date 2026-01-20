@@ -3298,8 +3298,14 @@ variables:
             )
         %}
 
+          {% set opening_min = state_attr(open_valve_entity,'min') | int(0) %}
           {% set opening_max = state_attr(open_valve_entity,'max') | int(100) %}
-          {% set opening_abs = state_attr(open_valve_entity,'max') | int(100) %}
+          
+          {% if opening_min < 0 %}
+            {% set opening_max = opening_max + abs(opening_min) %}
+          {% endif %}
+          
+          {% set opening_abs = opening_max %}
           {% set difference = target_temp - current_temp %}
           {% set step_size = input_valve_positioning_step_size | int %}
 
@@ -3324,6 +3330,10 @@ variables:
           {% endif %}
 
           {% set open_valve_entity_value = states(open_valve_entity) | int %}
+
+          {% if opening_min < 0 %}
+            {% set opening_abs = opening_abs + opening_min %}
+          {% endif %}
 
           {% if open_valve_entity_value != opening_abs %}
             {% set n.dict = n.dict + [(valve, [{'entity': open_valve_entity , 'value': opening_abs, 'current_temp': current_temp, 'target_temp': target_temp, 'difference': difference}])] %}
